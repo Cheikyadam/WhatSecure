@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "phone_auth",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "AndroidF",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "192.168.3.101:5555"
+        },
+        {
+            "name": "AndroidL",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "192.168.3.102:5555"
+        },
+        {
+            "name": "AndroidS",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "192.168.3.103:5555"
+        }
+       
+    ],
+    "compounds": [
+        {
+            "name": "All devices",
+            "configurations": ["AndroidF","AndroidL", "AndroidS"]
+        }
+    ]
+}
