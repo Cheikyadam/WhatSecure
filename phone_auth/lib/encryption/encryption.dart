@@ -36,11 +36,7 @@ class Encryption {
     await storage.write(key: 'privateKey', value: private);
     await storage.write(key: 'hiveKey', value: key.toString());
     await storage.write(key: 'publicKey', value: public);
-    // print("PRIVATE:${private}");
 
-    //print("KEY HIVE:$key");
-
-    //print("PUBLIC KEY: ${public}");
     return public;
   }
 
@@ -60,46 +56,3 @@ class Encryption {
     return decrypt(encodedMessage, private);
   }
 }
-
-/*Future<void> myfunction() async {
-  Future<crypto.AsymmetricKeyPair<crypto.PublicKey, crypto.PrivateKey>>
-      getKeyPair() {
-    var helper = RsaKeyHelper();
-
-    return helper.computeRSAKeyPair(helper.getSecureRandom());
-  }
-
-  Future<crypto.AsymmetricKeyPair> futureKeyPair;
-  crypto.AsymmetricKeyPair keyPair;
-  futureKeyPair = getKeyPair();
-
-  //crypto.PublicKey publicKey = keyPair.publicKey;
-  keyPair = await futureKeyPair;
-
-  //String privateKey = encodePrivateKeyToPemPKCS1(keyPair.privateKey);
-
-  String plaintext = "Hello world";
-
-  final publicKey = keyPair.publicKey as RSAPublicKey;
-  final privateKey = keyPair.privateKey as RSAPrivateKey;
-
-  String encrypted = encrypt(plaintext, publicKey);
-
-  String decr = decrypt(encrypted, privateKey);
-
-  print("DECRYPT:        $decr");
-
-  var helper = RsaKeyHelper();
-
-  String lPrivate = helper.encodePrivateKeyToPemPKCS1(privateKey);
-  print("PrivateKey:   $lPrivate");
-
-  String lPublic = helper.encodePublicKeyToPemPKCS1(publicKey);
-  print("PublicKey:     $lPublic");
-
-  RSAPrivateKey newprivate = helper.parsePrivateKeyFromPem(lPrivate);
-
-  String newdecr = decrypt(encrypted, newprivate);
-
-  print("NEW TEST:  $newdecr");
-}*/

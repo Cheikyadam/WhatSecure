@@ -70,7 +70,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                   controller: _phoneController,
                   decoration: InputDecoration(
                       prefixText: '+212 ',
-                      labelText: 'Enter your phone numer',
+                      labelText: 'Enter your phone number',
                       labelStyle: const TextStyle(fontSize: 20),
                       //fillColor: Colors.white,
                       border: OutlineInputBorder(

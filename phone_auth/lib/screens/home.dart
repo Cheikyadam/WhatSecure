@@ -1,23 +1,15 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:phone_auth/controllers/constants/constant_service.dart';
-import 'package:phone_auth/controllers/contact_api/contact_api.dart';
 import 'package:phone_auth/controllers/get_controllers/discussion_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
-import 'package:phone_auth/controllers/hive_controller/hive_helper.dart';
-import 'package:phone_auth/encryption/encryption.dart';
-//import 'package:phone_auth/encryption/encryption.dart';
+import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
+import 'package:phone_auth/const.dart';
 import 'package:phone_auth/models/chat_model.dart';
-import 'package:phone_auth/models/discussions_model.dart';
-import 'package:phone_auth/models/user_contact.dart';
+//import 'package:phone_auth/screens/contact_page.dart';
 import 'package:phone_auth/screens/contact_screen.dart';
 import 'package:phone_auth/screens/message_screen.dart';
-import 'package:stomp_dart_client/stomp.dart';
-import 'package:stomp_dart_client/stomp_config.dart';
-import 'package:stomp_dart_client/stomp_frame.dart';
-//import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:phone_auth/screens/settings/settings_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,10 +19,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final phone = GetStorage().read('phone');
-  List<AppContact> _allContact = [];
-  final String webSocketUrl = 'http://100.100.56.13:8080/ws';
-  late StompClient _stompClient;
+  //final phone = GetStorage().read('phone');
+  // final String webSocketUrl = 'http://$ip:8080/ws';
+  //late StompClient _stompClient;
   late DiscussionController controller;
   late KeyController? keys; // = Get.find<KeyController>();
   // String _privateKey = "";
@@ -94,10 +85,18 @@ class _HomePageState extends State<HomePage> {
 */
   @override
   void initState() {
-    //print('++++++++++INIT STATE CALLED+++++++++++++');
     super.initState();
+    if (!loaded) {
+      Get.put(DiscussionController());
+      Get.put(KeyController());
+      Get.put(StompController());
+    }
+    Get.find<StompController>();
+    keys = Get.find<KeyController>();
+    controller = Get.find<DiscussionController>();
+
     // _loadPrivateKey();
-    _stompClient = StompClient(
+    /*  _stompClient = StompClient(
       config: StompConfig.sockJS(
         //url: 'ws://192.168.1.17:8080/stomp-endpoint',
         url: webSocketUrl,
@@ -112,21 +111,20 @@ class _HomePageState extends State<HomePage> {
         stompConnectHeaders: {'Authorization': ''},
         webSocketConnectHeaders: {'Authorization': ''},
       ),
-    );
-    keys = Get.find<KeyController>();
+    );*/
+
     //if (keys == null)
-    keys ??= Get.put(KeyController());
+    // keys ??= Get.put(KeyController());
     //keys = Get.put(KeyController());
-    controller = Get.put((DiscussionController()));
-    _loadContact();
+    // _loadContact();
 
     //_alldiscussions = DiscussionController();
     // _alldiscussions = DiscussionHelper.getAllDiscussion();
     //_allContact =  UserContact.fetchContacts();
-    _stompClient.activate();
+    //_stompClient.activate();
   }
 
-  Future<void> _loadContact() async {
+  /* Future<void> _loadContact() async {
     try {
       final allcontact = await UserContact.fetchContacts();
       setState(() {
@@ -135,7 +133,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       // print("An error occurs");
     }
-  }
+  }*/
 
   /*Future<void> _loadPrivateKey() async {
     /*  AndroidOptions getAndroidOptions() => const AndroidOptions(
@@ -152,7 +150,7 @@ class _HomePageState extends State<HomePage> {
     });
   }*/
 
-  void onConnect(StompFrame frame) {
+  /* void onConnect(StompFrame frame) {
     _stompClient.subscribe(
       destination: '/topic/$phone/queue/messages',
       headers: {},
@@ -160,7 +158,12 @@ class _HomePageState extends State<HomePage> {
         // print(
         //   "+++++++++++++++++++MESSAGE RECEIVED HOME SCREEEEEEEEEEEEEEN+++++++++++++++++++");
         Map<String, dynamic>? result = json.decode(frame.body!);
-        ChatMessage message = ChatMessage.fromJson(result!);
+
+        result!['content'] = Encryption.decryptMessage(
+            encodedMessage: result['content'],
+            privateKey: keys!.privateKey.value);
+        print("Result:$result\n");
+        ChatMessage message = ChatMessage.fromJson(result);
         await ChatMessageHelper.addMessage(message);
         Discussion discussion = Discussion(
             senderId: result['senderId'], lastMessage: message, unread: 1);
@@ -170,15 +173,16 @@ class _HomePageState extends State<HomePage> {
         //_alldiscussions.addDiscussion(discussion);
       },
     );
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: const Color(0xFF34322f),
         appBar: AppBar(
           leading: IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Get.to(() => const Settings());
+            },
             icon: const Icon(Icons.menu),
           ),
           title: const Text('Discussions'),
@@ -189,145 +193,159 @@ class _HomePageState extends State<HomePage> {
         floatingActionButton: ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
           onPressed: () {
-            Get.off(() => (const ContactPage()));
+            Get.to(() => (const ContactPage()));
+            //Get.to(() => const ContactScreen());
           },
           child: const Icon(
             Icons.message,
           ),
         ),
-        body: //_isLoading
-            //? Container()
-            SingleChildScrollView(
-          child: Obx(() => ListView.builder(
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              physics: const ScrollPhysics(),
-              itemCount: controller.allDiscussions.length,
-              itemBuilder: (context, index) {
-                // print(keys.privateKey.value);
-                String decrypt = Encryption.decryptMessage(
-                    encodedMessage:
-                        controller.allDiscussions[index].lastMessage.content!,
-                    privateKey: keys!.privateKey.value);
+        body: SingleChildScrollView(
+          child: Obx(() {
+            final dicoKeys = controller.allDiscussions.keys.toList();
+            return ListView.builder(
+                scrollDirection: Axis.vertical,
+                shrinkWrap: true,
+                physics: const ScrollPhysics(),
+                itemCount: controller.allDiscussions.length,
+                itemBuilder: (context, index) {
+                  final String display =
+                      controller.allDiscussions[dicoKeys[index]]!.displayName;
+                  ChatMessage lastMessage = controller
+                      .allDiscussions[dicoKeys[index]]!.messages[controller
+                          .allDiscussions[dicoKeys[index]]!.messages.length -
+                      1];
 
-                final String display = UserContact.getDisplayname(
-                  _allContact,
-                  controller.allDiscussions[index].senderId,
-                );
-
-                return InkWell(
-                    onTap: () async {
-                      _stompClient.deactivate();
-                      //keys.dispose();
-                      //Get.delete<KeyController>();
-                      controller.dispose();
-                      // await myfunction();
-                      //StompUnsubscribe;
-                      //controller.allDiscussions.close();
-                      /*Get.find<DiscussionController>().addDiscussion(Discussion(
+                  return InkWell(
+                      onTap: () async {
+                        // _stompClient.deactivate();
+                        //keys.dispose();
+                        //Get.delete<KeyController>();
+                        // controller.dispose();
+                        // await myfunction();
+                        //StompUnsubscribe;
+                        //controller.allDiscussions.close();
+                        /*Get.find<DiscussionController>().addDiscussion(Discussion(
                           senderId: controller.allDiscussions[index].senderId,
                           lastMessage:
                               controller.allDiscussions[index].lastMessage,
                           unread: 0));*/
-                      DiscussionHelper.addDiscussion(Discussion(
-                          senderId: controller.allDiscussions[index].senderId,
-                          lastMessage:
-                              controller.allDiscussions[index].lastMessage,
-                          unread: 0));
-                      /* controller.addDiscussion(Discussion(
+                        // print(controller.allDiscussions.length);
+                        // int i = 0;
+                        // for (Discussion d in controller.allDiscussions) {
+                        //   print("ID $i: ${d.discussionId}");
+                        //   i++;
+                        // }
+                        // DiscussionHelper.reinitUnread(controller
+                        //     .allDiscussions[dicoKeys[index]]!.discussionId);
+                        /*addDiscussion(Discussion(
                           senderId: controller.allDiscussions[index].senderId,
                           lastMessage:
                               controller.allDiscussions[index].lastMessage,
                           unread: 0));*/
-                      // controller.allDiscussions.close();
-                      Get.delete<DiscussionController>();
-                      Get.off(() => Message(
-                          id: controller.allDiscussions[index].senderId,
-                          displayname: display));
-                    },
-                    splashColor: Colors.greenAccent,
-                    child: Container(
-                      padding:
-                          const EdgeInsets.only(left: 15, right: 10, top: 15),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 45,
-                            height: 45,
-                            margin: const EdgeInsets.only(right: 23),
-                            decoration: const BoxDecoration(
-                              color: Color.fromARGB(255, 18, 135, 78),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.person),
-                          ),
-                          Expanded(
-                              child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        display,
-                                        style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.grey),
-                                      ),
-                                      Wrap(
-                                        children: [
-                                          Text(
-                                            decrypt,
-                                            style: const TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w400,
-                                                color: Colors.grey),
-                                          )
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Text(controller.allDiscussions[index]
-                                                  .lastMessage.sentAt!.day ==
-                                              DateTime.now().day
-                                          ? "${controller.allDiscussions[index].lastMessage.sentAt!.hour.toString()}:${controller.allDiscussions[index].lastMessage.sentAt!.minute.toString()}"
-                                          : "${controller.allDiscussions[index].lastMessage.sentAt!.day.toString()}/${controller.allDiscussions[index].lastMessage.sentAt!.month.toString()}/${controller.allDiscussions[index].lastMessage.sentAt!.year.toString()}"),
-                                      controller.allDiscussions[index].unread !=
-                                              0
-                                          ? Container(
-                                              padding: const EdgeInsets.all(5),
-                                              decoration: const BoxDecoration(
-                                                  color: Colors.green,
-                                                  shape: BoxShape.circle),
-                                              child: Text(controller
-                                                  .allDiscussions[index].unread
-                                                  .toString()),
-                                            )
-                                          : Container(),
-                                    ],
-                                  )
-                                ],
+                        /* controller.addDiscussion(Discussion(
+                          senderId: controller.allDiscussions[index].senderId,
+                          lastMessage:
+                              controller.allDiscussions[index].lastMessage,
+                          unread: 0));*/
+                        // controller.allDiscussions.close();
+                        //Get.delete<DiscussionController>();
+                        controller.reinitUnreadController(controller
+                            .allDiscussions[dicoKeys[index]]!.discussionId);
+                        Get.to(() => Message(
+                            id: controller
+                                .allDiscussions[dicoKeys[index]]!.discussionId,
+                            displayname: display));
+                      },
+                      splashColor: Colors.greenAccent,
+                      child: Container(
+                        padding:
+                            const EdgeInsets.only(left: 15, right: 10, top: 15),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 45,
+                              height: 45,
+                              margin: const EdgeInsets.only(right: 23),
+                              decoration: const BoxDecoration(
+                                color: Color.fromARGB(255, 18, 135, 78),
+                                shape: BoxShape.circle,
                               ),
-                              /*const SizedBox(
+                              child: const Icon(Icons.person),
+                            ),
+                            Expanded(
+                                child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          display,
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w400,
+                                              color: Colors.grey),
+                                        ),
+                                        Wrap(
+                                          children: [
+                                            Text(
+                                              lastMessage.content,
+                                              style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w400,
+                                                  color: Colors.grey),
+                                            )
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        Text(lastMessage.sentAt!.day ==
+                                                DateTime.now().day
+                                            ? "${lastMessage.sentAt!.hour.toString()}:${lastMessage.sentAt!.minute.toString()}"
+                                            : "${lastMessage.sentAt!.day.toString()}/${lastMessage.sentAt!.month.toString()}/${lastMessage.sentAt!.year.toString()}"),
+                                        controller
+                                                    .allDiscussions[
+                                                        dicoKeys[index]]!
+                                                    .unread !=
+                                                0
+                                            ? Container(
+                                                padding:
+                                                    const EdgeInsets.all(5),
+                                                decoration: const BoxDecoration(
+                                                    color: Colors.green,
+                                                    shape: BoxShape.circle),
+                                                child: Text(controller
+                                                    .allDiscussions[
+                                                        dicoKeys[index]]!
+                                                    .unread
+                                                    .toString()),
+                                              )
+                                            : Container(),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                /*const SizedBox(
                               height: 20,
                             ),
                             Container(
                               color: Colors.grey,
                               height: 0.5,
                             )*/
-                            ],
-                          ))
-                        ],
-                      ),
-                    ));
-              })),
+                              ],
+                            ))
+                          ],
+                        ),
+                      ));
+                });
+          }),
         ));
   }
 
@@ -335,7 +353,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     //controller.dispose();
 
-    _stompClient.deactivate();
+    // _stompClient.deactivate();
     super.dispose();
   }
 }
@@ -399,3 +417,6 @@ SingleChildScrollView(
       ),
     );
  */
+
+
+

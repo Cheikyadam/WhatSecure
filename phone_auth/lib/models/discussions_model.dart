@@ -7,28 +7,34 @@ part 'discussions_model.g.dart';
 @HiveType(typeId: 2)
 class Discussion extends HiveObject {
   @HiveField(0)
-  String senderId;
+  String discussionId;
   @HiveField(1)
   int unread = 0;
   @HiveField(2)
-  ChatMessage lastMessage;
+  List<ChatMessage> messages;
+  @HiveField(3)
+  String displayName;
+
   Discussion(
-      {required this.senderId,
-      required this.lastMessage,
-      required this.unread});
+      {required this.discussionId,
+      required this.messages,
+      required this.unread,
+      required this.displayName});
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> discussionjson = {};
-    discussionjson['senderId'] = senderId;
-    discussionjson['lastMessage'] = lastMessage;
+    discussionjson['discussionId'] = discussionId;
+    discussionjson['messages'] = messages;
+    discussionjson['displayName'] = displayName;
     return discussionjson;
   }
 
   factory Discussion.fromJson(Map<String, dynamic> json) {
     return Discussion(
-        senderId: json['senderId'],
-        lastMessage: json['lastMessage'],
-        unread: json['unread']);
+        discussionId: json['discussionId'],
+        messages: json['messages'],
+        unread: json['unread'],
+        displayName: json['displayName']);
   }
   static List<Discussion> userFromJsonString(String str) {
     List<Discussion> allDiscussions = List<Discussion>.from(

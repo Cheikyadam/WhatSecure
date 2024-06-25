@@ -1,25 +1,22 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-//import 'package:phone_auth/models/user_model.dart';
-import 'const.dart';
+import '../../const.dart';
 
 class Api {
   static addUser(Map data) async {
     var response = await http.post(Url.adding,
         headers: Url.requestHeaders, body: jsonEncode(data));
     if (response.statusCode == 200) {
-      var result = response.body;
-
-      return result;
+      // var result = response.body;
+      return {'code': 200};
     } else {
-      return response.toString();
+      return {'code': response.statusCode, 'error': response};
     }
   }
 
   static allUsers() async {
     var response = await http.get(Url.fetching);
     if (response.statusCode == 200) {
-      //return User.userFromJsonString(response.body);
       return jsonDecode(response.body);
     } else {
       return response.toString();

@@ -17,9 +17,9 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ChatMessage(
-      senderId: fields[0] as String?,
-      content: fields[2] as String?,
-      recipientId: fields[1] as String?,
+      senderId: fields[0] as String,
+      content: fields[2] as String,
+      recipientId: fields[1] as String,
     )..sentAt = fields[3] as DateTime?;
   }
 

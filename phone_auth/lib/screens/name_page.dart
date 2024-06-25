@@ -58,6 +58,11 @@ class _NamePageState extends State<NamePage> {
                       publicKey: publiKey);
                   await Api.addUser(newUser.toMap());
                   GetStorage().writeIfNull('connected', true);
+                  GetStorage().writeIfNull('settings', {
+                    'darkTheme': false,
+                    'contacts': false,
+                    'faceVerif': false
+                  });
 
                   Get.off(() => (const HomePage()));
                   /*Navigator.pushReplacement(
@@ -78,6 +83,8 @@ class _NamePageState extends State<NamePage> {
                 publicKey: publiKey);
             await Api.addUser(newUser.toMap());
             GetStorage().writeIfNull('connected', true);
+            GetStorage().writeIfNull('settings',
+                {'darkTheme': false, 'contacts': false, 'faceVerif': false});
 
             Get.off(() => (const HomePage()));
             /* Navigator.pushReplacement(context,

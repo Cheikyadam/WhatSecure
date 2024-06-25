@@ -7,33 +7,33 @@ class UserContact {
   static List<Contact>? _contacts;
 
   static Future<List<AppContact>> fetchContacts() async {
-    print("HERE");
     if (!await FlutterContacts.requestPermission(readonly: true)) {
-      print("WHTAT");
       return [];
     } else {
-      print("OKAY");
       _contacts = await FlutterContacts.getContacts(withProperties: true);
 
       List<dynamic> allUsers = await Api.allUsers();
       List<String> allUsersId = List<String>.from(allUsers.map((e) => e['id']));
-      List<Contact> contactMatched = [];
-      for (int i = 0; i < _contacts!.length; i++) {
-        String id = _contacts![i].phones.first.normalizedNumber;
+      if (_contacts!.isEmpty) {
+        return [];
+      }
 
-        if (allUsersId.contains(id)) {
-          String publicKey = getPublicKey(allUsers, id);
-          AppContactHelper.addContact(AppContact(
-              userId: id,
-              displayName: _contacts![i].displayName,
-              publicKey: publicKey));
-          print(id);
-          contactMatched.add(_contacts![i]);
+      await AppContactHelper.deleteAppContact();
+      for (int i = 0; i < _contacts!.length; i++) {
+        if (_contacts![i].phones.isNotEmpty) {
+          String id = _contacts![i].phones.first.normalizedNumber;
+          //print(id);
+          //if (id.contains("+212")) {}
+          if (allUsersId.contains(id)) {
+            //print(i);
+            String publicKey = getPublicKey(allUsers, id);
+            AppContactHelper.addContact(AppContact(
+                userId: id,
+                displayName: _contacts![i].displayName,
+                publicKey: publicKey));
+          }
         }
       }
-      //print(contactMatched);
-      // return contactMatched;
-      print('hum');
       return AppContactHelper.getAllContact();
     }
   }

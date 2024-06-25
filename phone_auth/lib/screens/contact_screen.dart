@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:phone_auth/controllers/contact_api/contact_api.dart';
 import 'package:phone_auth/models/user_contact.dart';
 import 'package:phone_auth/screens/home.dart';
-import 'package:phone_auth/screens/message_screen.dart';
-//import 'package:phone_auth/controllers/user_api/user_api.dart';
+import 'package:phone_auth/screens/message_page.dart';
+//import 'package:phone_auth/screens/message_screen.dart';
 
 class ContactPage extends StatefulWidget {
   const ContactPage({super.key});
@@ -21,17 +21,12 @@ class _ContactPageState extends State<ContactPage> {
         title: const Text('Contacts'),
         leading: IconButton(
           onPressed: () {
-            Get.off(() => const HomePage());
+            Get.to(() => const HomePage());
           },
           icon: const Icon(Icons.arrow_back_ios),
         ),
         actions: [
-          IconButton(
-              onPressed: () async {
-                // await UserContact.fetchContacts();
-                //await Api.allUsers();
-              },
-              icon: const Icon(Icons.search))
+          IconButton(onPressed: () async {}, icon: const Icon(Icons.search))
         ],
       ),
       body: Center(
@@ -48,19 +43,14 @@ class _ContactPageState extends State<ContactPage> {
                 return ListView.builder(
                   itemCount: snapshot.data!.length,
                   itemBuilder: (context, index) => Container(
-                    // alignment: Alignment.centerLeft,
                     margin: const EdgeInsets.only(left: 10, right: 10),
                     child: Center(
                       child: OutlinedButton(
                         onPressed: () {
-                          Get.off(() => (Message(
-                                displayname: snapshot.data![index].displayName,
+                          Get.to(() => (MessagesPage(
+                                displayName: snapshot.data![index].displayName,
                                 id: snapshot.data![index].userId,
                               )));
-                          /*Chat(
-                                      chatId: snapshot.data![index].phones.first
-                                          .normalizedNumber,
-                                      userId: ""));*/
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,

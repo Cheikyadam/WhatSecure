@@ -1,22 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:phone_auth/controllers/constants/constant_service.dart';
-import 'package:phone_auth/controllers/get_controllers/chat_controller.dart';
+import 'package:phone_auth/controllers/get_controllers/discussion_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
-//import 'package:phone_auth/controllers/get_controllers/discussion_controller.dart';
-import 'package:phone_auth/controllers/hive_controller/hive_helper.dart';
+import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
 import 'package:phone_auth/encryption/encryption.dart';
-//import 'package:phone_auth/controllers/hive_controller/hive_helper.dart';
 import 'package:phone_auth/models/chat_model.dart';
-import 'package:phone_auth/models/discussions_model.dart';
 import 'package:phone_auth/models/user_contact.dart';
 import 'package:phone_auth/screens/home.dart';
-import 'package:stomp_dart_client/stomp.dart';
-import 'package:stomp_dart_client/stomp_config.dart';
-import 'package:stomp_dart_client/stomp_frame.dart';
-import 'package:stomp_dart_client/stomp_handler.dart';
 
 class Message extends StatefulWidget {
   const Message({super.key, required this.id, required this.displayname});
@@ -28,11 +20,13 @@ class Message extends StatefulWidget {
 }
 
 class _MessageState extends State<Message> {
-  final phone = GetStorage().read('phone');
-  final String webSocketUrl = 'http://100.100.56.13:8080/ws';
-  late StompClient _stompClient;
+  // final phone = GetStorage().read('phone');
+  //final String webSocketUrl = 'http://$ip:8080/ws';
+  //late StompClient _stompClient;
   final TextEditingController _controller = TextEditingController();
-  late ChatController _allMessages;
+  //late List<ChatMessage> _allMessages;
+  late StompController stompController;
+  late DiscussionController discussionController;
   //late KeyController keys;
   KeyController? keys = Get.find<KeyController>();
   // String _privateKey = "";
@@ -66,8 +60,12 @@ class _MessageState extends State<Message> {
   @override
   void initState() {
     super.initState();
+    //stompController = Get.find<StompController>();
+    stompController = Get.find<StompController>();
+    discussionController = Get.find<DiscussionController>();
+
     //_loadPrivateKey();
-    _stompClient = StompClient(
+    /* _stompClient = StompClient(
       config: StompConfig.sockJS(
         //url: 'ws://192.168.1.17:8080/stomp-endpoint',
         url: webSocketUrl,
@@ -106,20 +104,20 @@ class _MessageState extends State<Message> {
           //print('WebSocket - onUnhandledReceipt executed! ${frame.toString()}');
         },
       ),
-    );
+    );*/
     //print("+++++++++++${widget.id}+++++++++++++++++++++++");
     //_allMessages = Get.
     //discussionController = Get.put(DiscussionController());
     keys ??= Get.put(KeyController());
     //keys = Get.put(KeyController());
-    _allMessages = Get.put(ChatController(senderId: widget.id));
+    // _allMessages = Get.put(ChatController(senderId: widget.id));
 
     // _allMessages =  ChatMessageHelper.getMessageBySenderId(widget.id);
 
-    _stompClient.activate();
+    //  _stompClient.activate();
   }
 
-  void onConnect(StompFrame frame) {
+  /* void onConnect(StompFrame frame) {
     //print("Connected");
     _stompClient.subscribe(
       destination: '/topic/$phone/queue/messages',
@@ -130,7 +128,10 @@ class _MessageState extends State<Message> {
         //  "+++++++++++++++++++++++++MESSSAGE SCREENNNNNN+++++++++++++++++++");
         //print(
         // "==============================$result================================");
-        ChatMessage message = ChatMessage.fromJson(result!);
+        result!['content'] = Encryption.decryptMessage(
+            encodedMessage: result['content'],
+            privateKey: keys!.privateKey.value);
+        ChatMessage message = ChatMessage.fromJson(result);
 
         await ChatMessageHelper.addMessage(message);
         Discussion discussion = Discussion(
@@ -146,19 +147,15 @@ class _MessageState extends State<Message> {
       },
     );
   }
-
+*/
   void _send(ChatMessage message) async {
-    AppContact contact = await AppContactHelper.getContact(userId: widget.id);
-
-    String content = message.content!;
+    AppContact? contact = keys!.getContact(widget.id);
+    String content = message.content;
     String cryptedMes = Encryption.encryptMessage(
-        message: content, publicKey: contact.publicKey);
-
-    //print("PUBLIC KEY RECIPIENT:  ${contact.publicKey}");
-
+        message: content, publicKey: contact!.publicKey);
     message.content = cryptedMes;
 
-    _stompClient.send(
+    stompController.stompClient.send(
       destination: "/app/chat",
       body: json.encode(message.toMap()),
     );
@@ -166,18 +163,19 @@ class _MessageState extends State<Message> {
     //  print("************************$content**********************");
 
     //print("PUBLIC KEY SENDER:  $ publicKey");
-    String newEn = Encryption.encryptMessage(
-        message: content, publicKey: Get.find<KeyController>().publicKey.value);
+    /*String newEn = Encryption.encryptMessage(
+        message: content, publicKey: Get.find<KeyController>().publicKey.value);*/
 
-    message.content = newEn;
-
-    await ChatMessageHelper.addMessage(message);
-    Discussion discussion = Discussion(
-        senderId: message.recipientId!, lastMessage: message, unread: 0);
+    // await ChatMessageHelper.addMessage(message);
+    //Discussion discussion = Discussion(
+    //  senderId: message.recipientId!, lastMessage: message, unread: 0);
     //Get.find<DiscussionController>().addDiscussion(discussion);
-    await DiscussionHelper.addDiscussion(discussion);
+    // await DiscussionHelper.addDiscussion(discussion);
+    message.content = content;
+    //await DiscussionHelper.addMessageToDiscussion(message, widget.id);
+    discussionController.addMessageToDiscussionController(message, widget.id);
 
-    _allMessages.addChat(message);
+    // _allMessages.addChat(message);
 
     //_allMessages.addChat(message);
     //Get.find<ChatController>().addChat(message);
@@ -205,20 +203,22 @@ class _MessageState extends State<Message> {
     //print("++++++++++++++++++++++++++++++++++++++++");
     //_allMessages = Get.put(ChatController(senderId: widget.id));
     return Scaffold(
-      backgroundColor: const Color(0xFF34322f),
+      //backgroundColor: const Color(0xFF34322f),
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            _stompClient.deactivate();
-            _allMessages.dispose();
+            // _stompClient.deactivate();
+            //_allMessages.dispose();
             //keys.dispose();
             //Get.delete<KeyController>();
             // _allMessages.allChats.close();
-            Get.delete<ChatController>();
+            // Get.delete<ChatController>();
             // Get.delete<DiscussionController>();
             //Get.close<ChatController>(0);
-            StompUnsubscribe;
-            Get.off(() => const HomePage());
+            //StompUnsubscribe;
+            final controller = Get.find<DiscussionController>();
+            controller.reinitUnreadController(widget.id);
+            Get.to(() => const HomePage());
           },
           icon: const Icon(Icons.arrow_back_ios),
         ),
@@ -370,7 +370,7 @@ class _MessageState extends State<Message> {
                 onPressed: () {
                   if (_controller.text.isNotEmpty) {
                     _send(ChatMessage(
-                      senderId: phone,
+                      senderId: keys!.phone.value,
                       content: _controller.text,
                       recipientId: widget.id,
                     ));
@@ -399,23 +399,25 @@ class _MessageState extends State<Message> {
         reverse: true,
         scrollDirection: Axis.vertical,
         padding: const EdgeInsets.all(7),
-        child: Obx(
-          () => ListView.builder(
+        child: Obx(() {
+          final allMessages =
+              discussionController.getDiscussionMessages(widget.id);
+          return ListView.builder(
             physics: const ScrollPhysics(),
             shrinkWrap: true,
             scrollDirection: Axis.vertical,
-            itemCount: _allMessages.allChats.length,
+            itemCount: allMessages.length,
             itemBuilder: (context, index) {
               //print(keys.privateKey.value);
               //print(_allMessages.allChats[index].content!);
-              String decrypt = Encryption.decryptMessage(
+              /*String decrypt = Encryption.decryptMessage(
                   encodedMessage: _allMessages.allChats[index].content!,
-                  privateKey: keys!.privateKey.value);
+                  privateKey: keys!.privateKey.value);*/
               //print(decrypt);
               //print(_allMessages.allChats[index].senderId);
               return Column(
                 crossAxisAlignment:
-                    _allMessages.allChats[index].senderId == phone
+                    allMessages[index].senderId == keys!.phone.value
                         ? CrossAxisAlignment.end
                         : CrossAxisAlignment.start,
                 children: [
@@ -424,16 +426,15 @@ class _MessageState extends State<Message> {
                   ),
                   Container(
                     constraints: BoxConstraints(
-                      maxWidth:
-                          _allMessages.allChats[index].content!.length > 21
-                              ? MediaQuery.of(context).size.width * 0.6
-                              : MediaQuery.of(context).size.width * 0.4,
+                      maxWidth: allMessages[index].content.length > 21
+                          ? MediaQuery.of(context).size.width * 0.6
+                          : MediaQuery.of(context).size.width * 0.4,
                       //minWidth: 10,
                       //minHeight: 2
                     ),
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                        color: _allMessages.allChats[index].senderId! == phone
+                        color: allMessages[index].senderId == keys!.phone.value
                             ? Colors.green
                             : Colors.black38,
                         borderRadius:
@@ -444,13 +445,13 @@ class _MessageState extends State<Message> {
                         Row(children: [
                           Expanded(
                             child: Text(
-                              decrypt,
+                              allMessages[index].content,
                               style: const TextStyle(fontSize: 15),
                             ),
                           ),
                         ]),
                         Text(
-                            "${_allMessages.allChats[index].sentAt!.hour}:${_allMessages.allChats[index].sentAt!.minute}"),
+                            "${allMessages[index].sentAt!.hour}:${allMessages[index].sentAt!.minute}"),
                       ],
                     ),
                   ),
@@ -458,15 +459,15 @@ class _MessageState extends State<Message> {
                 ],
               );
             },
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
 
   @override
   void dispose() {
-    _stompClient.deactivate();
+    // _stompClient.deactivate();
     // _allMessages.dispose();
     //_controller.dispose();
     super.dispose();

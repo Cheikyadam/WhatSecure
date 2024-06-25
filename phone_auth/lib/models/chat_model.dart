@@ -5,7 +5,6 @@ part 'chat_model.g.dart';
 
 @HiveType(typeId: 1)
 class ChatMessage extends HiveObject {
-  //String? chatId;
   ChatMessage({
     required this.senderId,
     required this.content,
@@ -15,11 +14,11 @@ class ChatMessage extends HiveObject {
   }
 
   @HiveField(0)
-  String? senderId;
+  String senderId;
   @HiveField(1)
-  String? recipientId;
+  String recipientId;
   @HiveField(2)
-  String? content;
+  String content;
   @HiveField(3)
   DateTime? sentAt;
 

@@ -17,22 +17,25 @@ class DiscussionAdapter extends TypeAdapter<Discussion> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Discussion(
-      senderId: fields[0] as String,
-      lastMessage: fields[2] as ChatMessage,
+      discussionId: fields[0] as String,
+      messages: (fields[2] as List).cast<ChatMessage>(),
       unread: fields[1] as int,
+      displayName: fields[3] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Discussion obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.senderId)
+      ..write(obj.discussionId)
       ..writeByte(1)
       ..write(obj.unread)
       ..writeByte(2)
-      ..write(obj.lastMessage);
+      ..write(obj.messages)
+      ..writeByte(3)
+      ..write(obj.displayName);
   }
 
   @override
