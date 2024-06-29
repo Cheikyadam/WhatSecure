@@ -4,6 +4,7 @@ import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/settings_controller.dart';
 import 'package:phone_auth/const.dart';
 import 'package:phone_auth/screens/settings/face_verif.dart';
+import 'package:phone_auth/screens/settings/modif_profile.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -14,6 +15,13 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
   final settingsController = Get.find<SettingsController>();
+
+  @override
+  void initState() {
+    super.initState();
+    settingsController.changeImageUrl();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,70 +39,58 @@ class _SettingsState extends State<Settings> {
                 const SizedBox(
                   height: 10,
                 ),
-                Container(
-                  margin: const EdgeInsets.all(20.0),
-                  decoration: const BoxDecoration(
-                      color: color1,
-                      borderRadius: BorderRadius.all(Radius.circular(10))),
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 15,
-                      ),
-                      Container(
-                        width: 45,
-                        height: 45,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+                InkWell(
+                  onTap: () {
+                    Get.to(() => const Modifprofile());
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.all(20.0),
+                    decoration: const BoxDecoration(
+                        color: color1,
+                        borderRadius: BorderRadius.all(Radius.circular(10))),
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 15,
                         ),
-                        child: Container(
-                          width: 45,
-                          height: 45,
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Image.asset(
-                            'assets/icons/profil.png',
-                            fit: BoxFit.contain,
-                          ),
+                        IconProfilWidget(
+                            settingsController: settingsController),
+                        const SizedBox(
+                          width: 15,
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Mon Profil',
-                            style: TextStyle(
-                                //color: Colors.white,
-                                fontSize: 18),
-                          ),
-                          Row(children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             const Text(
-                              'Username: ',
+                              'Mon Profil',
                               style: TextStyle(
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                            Text(
-                              Get.find<KeyController>().username.value,
-                              style: const TextStyle(
                                   //color: Colors.white,
-                                  fontSize: 17),
-                            )
-                          ])
-                        ],
-                      )
-                    ],
+                                  fontSize: 18),
+                            ),
+                            Row(children: [
+                              const Text(
+                                'Username: ',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              Text(
+                                Get.find<KeyController>().username.value,
+                                style: const TextStyle(
+                                    //color: Colors.white,
+                                    fontSize: 17),
+                              )
+                            ])
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 PlainWidget(
                   onTap: () {},
-                  text: 'Changer de numero de telephone',
+                  text: 'Modifier les informations personnelles',
                   imageAsset: 'assets/icons/recycler.png',
                 ),
                 Row(
@@ -242,6 +238,55 @@ class _SettingsState extends State<Settings> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class IconProfilWidget extends StatelessWidget {
+  const IconProfilWidget({
+    super.key,
+    required this.settingsController,
+  });
+
+  final SettingsController settingsController;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+      child: Obx(
+        () => Image.network(
+          settingsController.imageUrl.value,
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color.fromARGB(255, 230, 230, 230)),
+            child: Image.asset(
+              'assets/icons/profil.png',
+              width: 45,
+              height: 45,
+              fit: BoxFit.cover,
+            ),
+          ),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            } else {
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          (loadingProgress.expectedTotalBytes ?? 1)
+                      : null,
+                ),
+              );
+            }
+          },
         ),
       ),
     );

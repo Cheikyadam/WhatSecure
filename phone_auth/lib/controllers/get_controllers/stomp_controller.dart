@@ -24,7 +24,24 @@ class StompController extends GetxController {
         url: webSocketUrl,
         onConnect: onConnect,
         beforeConnect: () async {},
-        onWebSocketError: (dynamic error) => {},
+        onWebSocketError: (dynamic error) {
+          // print('Web Socket Error: $error');
+        },
+        onUnhandledFrame: (frame) {
+          //print('Unhandled frame: $frame');
+        },
+        onUnhandledMessage: (message) {
+          //print('Unhandled message: $message');
+        },
+        onUnhandledReceipt: (frame) {
+          //print('unhandled receipt: $frame');
+        },
+        onStompError: (error) {
+          // print(('Stomp error: $error'));
+        },
+        onDebugMessage: (message) {
+          print('onDebugMessage: $message');
+        },
         stompConnectHeaders: {'Authorization': ''},
         webSocketConnectHeaders: {'Authorization': ''},
       ),
@@ -35,17 +52,18 @@ class StompController extends GetxController {
     final KeyController keys = Get.find<KeyController>();
     final DiscussionController controller = Get.find<DiscussionController>();
     final phone = keys.phone.value;
+
     stompClient.subscribe(
       destination: '/topic/$phone/queue/messages',
       headers: {},
       callback: (frame) async {
         Map<String, dynamic>? result = json.decode(frame.body!);
         print('received');
-        result!['content'] = Encryption.decryptMessage(
-            encodedMessage: result['content'],
-            privateKey: keys.privateKey.value);
-        // print(keys.privateKey);
-        ChatMessage message = ChatMessage.fromJson(result);
+        // result!['content'] = Encryption.decryptMessage(
+        //     encodedMessage: result['content'],
+        //     privateKey: keys.privateKey.value);
+        //print(keys.privateKey);
+        ChatMessage message = ChatMessage.fromJson(result!);
         controller.addMessageToDiscussionController(message, message.senderId);
       },
     );

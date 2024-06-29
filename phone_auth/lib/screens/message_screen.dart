@@ -9,6 +9,7 @@ import 'package:phone_auth/encryption/encryption.dart';
 import 'package:phone_auth/models/chat_model.dart';
 import 'package:phone_auth/models/user_contact.dart';
 import 'package:phone_auth/screens/home.dart';
+import 'package:phone_auth/models/message_type.dart';
 
 class Message extends StatefulWidget {
   const Message({super.key, required this.id, required this.displayname});
@@ -370,6 +371,8 @@ class _MessageState extends State<Message> {
                 onPressed: () {
                   if (_controller.text.isNotEmpty) {
                     _send(ChatMessage(
+                      fileName: "",
+                      messageType: MessageType.text,
                       senderId: keys!.phone.value,
                       content: _controller.text,
                       recipientId: widget.id,

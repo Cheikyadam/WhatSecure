@@ -4,8 +4,10 @@ import 'package:phone_auth/const.dart';
 import 'package:phone_auth/controllers/constants/constant_service.dart';
 import 'package:phone_auth/controllers/get_controllers/discussion_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
+import 'package:phone_auth/controllers/get_controllers/settings_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
 import 'package:phone_auth/models/chat_model.dart';
+import 'package:phone_auth/screens/contact_page.dart';
 import 'package:phone_auth/screens/message_page.dart';
 import 'package:intl/intl.dart';
 
@@ -393,7 +395,7 @@ class DiscussionWidget extends StatelessWidget {
             ));
       },
       child: Container(
-        margin: const EdgeInsets.only(left: 8.0, top: 4.0),
+        margin: const EdgeInsets.only(left: 8.0, top: 2.0),
         padding: const EdgeInsets.only(
           left: 8.0,
           top: 8.0,
@@ -404,17 +406,10 @@ class DiscussionWidget extends StatelessWidget {
               width: 15,
             ),
             Container(
-              width: 50,
-              height: 50,
               margin: const EdgeInsets.only(right: 15),
-              padding: const EdgeInsets.all(7),
-              decoration: const BoxDecoration(
-                color: color1,
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset(
-                'assets/icons/profil.png',
-                fit: BoxFit.contain,
+              child: IconProfilWidgetContact(
+                id: discussionId,
+                settingsController: Get.find<SettingsController>(),
               ),
             ),
             Expanded(
@@ -463,7 +458,7 @@ class DiscussionWidget extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.only(bottom: 15.0),
+                    padding: const EdgeInsets.only(bottom: 10.0),
                     decoration: const BoxDecoration(
                         border: Border(bottom: BorderSide(color: color1))),
                   )

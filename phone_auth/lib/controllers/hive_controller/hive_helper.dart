@@ -3,15 +3,17 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/models/chat_model.dart';
 import 'package:phone_auth/models/discussions_model.dart';
+import 'package:phone_auth/models/message_type.dart';
 import 'package:phone_auth/models/recognition_model.dart';
 import 'package:phone_auth/models/user_contact.dart';
 
 class DiscussionHelper {
-  static const _discussion = "discussions";
+  static const _discussion = "alldkiscussions";
 
   static Future<void> setupDatabase() async {
     await Hive.initFlutter();
     Hive.registerAdapter(DiscussionAdapter());
+    Hive.registerAdapter(MessageTypeAdapter());
   }
 
   static Future<void> initAllDiscussion() async {
@@ -94,6 +96,8 @@ class DiscussionHelper {
 
   static Future<Map<String, Discussion>> getAllDiscussion() async {
     final box = await Hive.openBox<Discussion>(_discussion);
+    //await Hive.box(_discussion).clear();
+    //final box = await Hive.openBox<Discussion>(_discussion);
     //box.deleteFromDisk();
     List<Discussion> all = box.values.toList();
     List<Discussion> cpDiscussion = List.from(all);
@@ -106,7 +110,7 @@ class DiscussionHelper {
 }
 
 class ChatMessageHelper {
-  static const _chatMessage = "chats";
+  static const _chatMessage = "allnewichats";
 
   static Future<void> setupDatabase() async {
     await Hive.initFlutter();

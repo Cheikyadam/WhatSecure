@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/const.dart';
+import 'package:phone_auth/controllers/get_controllers/settings_controller.dart';
 import 'package:phone_auth/screens/message_page.dart';
 //import 'package:phone_auth/screens/message_screen.dart';
 
@@ -54,6 +55,7 @@ class ContactScreen extends StatelessWidget {
             InkWell(
               onTap: () {
                 Get.find<KeyController>().refreshContact();
+                Get.find<SettingsController>().changeTimestamp();
               },
               child: Container(
                 padding: const EdgeInsets.all(2),
@@ -79,6 +81,7 @@ class ContactScreen extends StatelessWidget {
                   shrinkWrap: true,
                   itemCount: contacts.allContact.length,
                   itemBuilder: (context, index) => ContactWidget(
+                    id: contacts.allContact[index].userId,
                     displayName: contacts.allContact[index].displayName,
                     onTap: () {
                       Get.to(() => MessagesPage(
@@ -98,11 +101,12 @@ class ContactScreen extends StatelessWidget {
 class ContactWidget extends StatelessWidget {
   final String displayName;
   final VoidCallback onTap;
-
+  final String id;
   const ContactWidget({
     super.key,
     required this.displayName,
     required this.onTap,
+    required this.id,
   });
 
   @override
@@ -118,18 +122,9 @@ class ContactWidget extends StatelessWidget {
               width: 15,
             ),
             Container(
-              width: 50,
-              height: 50,
               margin: const EdgeInsets.only(right: 15),
-              padding: const EdgeInsets.all(7),
-              decoration: const BoxDecoration(
-                color: color1,
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset(
-                'assets/icons/profil.png',
-                fit: BoxFit.contain,
-              ),
+              child: IconProfilWidgetContact(
+                  settingsController: Get.find<SettingsController>(), id: id),
             ),
             Expanded(
               child: Container(
@@ -144,6 +139,57 @@ class ContactWidget extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class IconProfilWidgetContact extends StatelessWidget {
+  const IconProfilWidgetContact({
+    super.key,
+    required this.settingsController,
+    required this.id,
+  });
+
+  final SettingsController settingsController;
+  final String id;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+      child: Obx(
+        () => Image.network(
+          'http://$ip:8080/image/$id?timestamp=${settingsController.timestamp.value}',
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            padding: const EdgeInsets.all(7),
+            decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color.fromARGB(255, 230, 230, 230)),
+            child: Image.asset(
+              'assets/icons/profil.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
+            ),
+          ),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            } else {
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          (loadingProgress.expectedTotalBytes ?? 1)
+                      : null,
+                ),
+              );
+            }
+          },
         ),
       ),
     );

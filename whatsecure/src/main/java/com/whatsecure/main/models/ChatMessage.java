@@ -18,4 +18,12 @@ public class ChatMessage {
 	    private String recipientId;
 	    private String content;
 	    private Date sentAt;
+	    private String fileName;
+	    private MessageType messageType;
+}
+
+enum MessageType{
+	image,
+	text,
+	doc
 }

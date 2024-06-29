@@ -16,11 +16,11 @@ class KeyController extends GetxController {
   void onInit() {
     super.onInit();
     _loadValue();
-    print('key');
-    print(allContact.length);
-    for (AppContact contact in allContact) {
-      print(contact.userId);
-    }
+    // print('key');
+    //print(allContact.length);
+    // for (AppContact contact in allContact) {
+    //   print(contact.userId);
+    //}
   }
 
   void _loadValue() async {

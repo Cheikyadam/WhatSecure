@@ -37,6 +37,8 @@ public class ChatController {
 	@MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
         
+		
+		
 		String sendTo = "/topic/" +chatMessage.getRecipientId() +  "/queue/messages";
         messagingTemplate.convertAndSend(
                 sendTo,

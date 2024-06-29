@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:phone_auth/const.dart';
+import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 
 const my = Color(0xFF4E057E);
 
@@ -8,6 +10,9 @@ class SettingsController extends GetxController {
   RxMap<String, dynamic> settings = <String, dynamic>{}.obs;
   RxBool faveVerif = false.obs;
   RxList<Color> colors = <Color>[].obs;
+  // RxBool profileLoading = false.obs;
+  RxString imageUrl = "".obs;
+  RxString timestamp = "".obs;
 
   @override
   void onInit() {
@@ -20,10 +25,20 @@ class SettingsController extends GetxController {
     faveVerif.value = settings['faceVerif'];
     Color mycolor = settings['darkTheme'] ? Colors.black : Colors.white;
     colors.value = [mycolor, const Color(0xFF4E057E)];
+    timestamp.value = '${DateTime.now().millisecondsSinceEpoch}';
   }
 
   void changeColor() {
     colors.value = [Colors.red, Colors.red];
+  }
+
+  void changeTimestamp() {
+    timestamp.value = '${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  void changeImageUrl() {
+    imageUrl.value =
+        'http://$ip:8080/image/${Get.find<KeyController>().phone.value}?timestamp=${DateTime.now().millisecondsSinceEpoch}';
   }
 
   void reinitColor() {
