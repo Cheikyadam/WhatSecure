@@ -17,7 +17,7 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ChatMessage(
-      fileName: fields[5] as String,
+      fileInfos: (fields[5] as Map).cast<String, String>(),
       messageType: fields[4] as MessageType,
       senderId: fields[0] as String,
       content: fields[2] as String,
@@ -40,7 +40,7 @@ class ChatMessageAdapter extends TypeAdapter<ChatMessage> {
       ..writeByte(4)
       ..write(obj.messageType)
       ..writeByte(5)
-      ..write(obj.fileName);
+      ..write(obj.fileInfos);
   }
 
   @override

@@ -18,7 +18,7 @@ class RecognitionModelAdapter extends TypeAdapter<RecognitionModel> {
     };
     return RecognitionModel(
       name: fields[0] as String,
-      embeddings: (fields[2] as List).cast<double>(),
+      embeddings: (fields[1] as List).cast<double>(),
     );
   }
 
@@ -28,7 +28,7 @@ class RecognitionModelAdapter extends TypeAdapter<RecognitionModel> {
       ..writeByte(2)
       ..writeByte(0)
       ..write(obj.name)
-      ..writeByte(2)
+      ..writeByte(1)
       ..write(obj.embeddings);
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phone_auth/controllers/user_api/user_api.dart';
-import 'package:phone_auth/encryption/encryption.dart';
+import 'package:phone_auth/encryption/rsa_encryption.dart';
 import 'package:phone_auth/models/user_model.dart';
 import 'package:phone_auth/screens/home.dart';
 import 'package:get_storage/get_storage.dart';

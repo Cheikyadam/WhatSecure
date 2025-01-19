@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grouped_list/grouped_list.dart';
+import 'package:phone_auth/encryption/aes_encryption.dart';
 import 'package:phone_auth/models/message_type.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -13,7 +14,7 @@ import 'package:phone_auth/controllers/get_controllers/discussion_controller.dar
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/settings_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
-import 'package:phone_auth/encryption/encryption.dart';
+import 'package:phone_auth/encryption/rsa_encryption.dart';
 import 'package:phone_auth/models/chat_model.dart';
 import 'package:phone_auth/models/user_contact.dart';
 import 'package:phone_auth/screens/contact_page.dart';
@@ -27,6 +28,8 @@ import 'package:mime/mime.dart';
 import 'dart:typed_data';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:open_file/open_file.dart';
+import 'package:video_compress/video_compress.dart';
+import 'package:video_player/video_player.dart';
 
 /*class MessagesPage extends StatefulWidget {
   const MessagesPage({super.key});
@@ -323,6 +326,7 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 
   _imgFromCamera() async {
+    isChoosingFile = true;
     XFile? pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       File image = File(pickedFile.path);
@@ -332,10 +336,14 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 
   _compressAndSend(File file, String fileName) async {
-    File? compressedImage = await _compressImage(file);
-    String base64Image = base64Encode(compressedImage!.readAsBytesSync());
+    if (fileName.split('.').last == 'jpg' ||
+        fileName.split('.').last == 'jpeg') {
+      File? compressedImage = await _compressImage(file);
+      file = compressedImage!;
+    }
+    String base64Image = base64Encode(file.readAsBytesSync());
     _send(ChatMessage(
-        fileName: fileName,
+        fileInfos: {'fileName': fileName},
         messageType: MessageType.image,
         senderId: keys!.phone.value,
         content: base64Image,
@@ -343,6 +351,7 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 
   Future<File?> _compressImage(File image) async {
+    // print('compress called');
     final tempDir = await getTemporaryDirectory();
     final targetPath =
         join(tempDir.path, 'temp_${DateTime.now().millisecondsSinceEpoch}.jpg');
@@ -356,7 +365,18 @@ class _MessagesPageState extends State<MessagesPage> {
     return File(result!.path);
   }
 
+  Future<String?> _compressVideo(File videoFile) async {
+    MediaInfo? mediaInfo = await VideoCompress.compressVideo(
+      videoFile.path,
+      quality: VideoQuality.MediumQuality,
+      deleteOrigin: true,
+      // It's false by default
+    );
+    return mediaInfo!.path;
+  }
+
   _chooseFile() async {
+    isChoosingFile = true;
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(allowMultiple: true);
 
@@ -368,9 +388,17 @@ class _MessagesPageState extends State<MessagesPage> {
           _compressAndSend(currentFile, fileName);
         } else {
           String fileName = currentFile.path.split('/').last;
-          String base64Image = base64Encode(currentFile.readAsBytesSync());
+          String base64Image = "";
+          if (fileName.split('.').last == 'mp4') {
+            String? path = await _compressVideo(currentFile);
+            base64Image = base64Encode(File(path!).readAsBytesSync());
+            await VideoCompress.deleteAllCache();
+          } else {
+            base64Image = base64Encode(currentFile.readAsBytesSync());
+          }
+          //String base64Image = base64Encode(currentFile.readAsBytesSync());
           _send(ChatMessage(
-              fileName: fileName,
+              fileInfos: {'fileName': fileName},
               messageType: MessageType.doc,
               senderId: keys!.phone.value,
               content: base64Image,
@@ -400,9 +428,21 @@ class _MessagesPageState extends State<MessagesPage> {
       await file.writeAsBytes(bytes);
 
       // OpenFile.open(filePath);
-      Get.to(() => PDFScreen(
-            path: filePath,
-          ));
+      if (fileName.contains('.pdf')) {
+        Get.to(() => PDFScreen(
+              docName: fileName,
+              path: filePath,
+            ));
+      } else {
+        if (fileName.contains('.mp4')) {
+          Get.to(() => VideoPlayerScreen(
+                videoPath: filePath,
+                fileName: fileName,
+              ));
+        } else {
+          OpenFile.open(filePath);
+        }
+      }
       // PDFView(
       //   filePath: file.path,
       //   enableSwipe: true,
@@ -428,17 +468,28 @@ class _MessagesPageState extends State<MessagesPage> {
       //   //   print('page change: $page/$total');
       // );
     } catch (e) {
-      print('Erreur lors de l\'ouverture du fichier: $e');
+      //  print('Erreur lors de l\'ouverture du fichier: $e');
     }
   }
 
   void _send(ChatMessage message) async {
-    // AppContact? contact = keys!.getContact(widget.id);
+    AppContact? contact = keys!.getContact(widget.id);
     String content = message.content;
-    // String cryptedMes = Encryption.encryptMessage(
-    //     message: content, publicKey: contact!.publicKey);
-    // message.content = cryptedMes;
-
+    if (message.messageType == MessageType.text) {
+      String cryptedMes = Encryption.encryptMessage(
+          message: content, publicKey: contact!.publicKey);
+      message.content = cryptedMes;
+    } else {
+      final cryptedMes = AesEncryption.encryptFile(content);
+      final cryptedKey = Encryption.encryptMessage(
+          message: AesEncryption.key!, publicKey: contact!.publicKey);
+      final cryptedIv = Encryption.encryptMessage(
+          message: AesEncryption.iv!, publicKey: contact.publicKey);
+      message.content = cryptedMes;
+      message.fileInfos['key'] = cryptedKey;
+      message.fileInfos['iv'] = cryptedIv;
+      //encrypt files
+    }
     //print('PUBLICKEY: ${contact.publicKey}');
 
     //print(message.toMap());
@@ -451,7 +502,8 @@ class _MessagesPageState extends State<MessagesPage> {
     message.content = content;
     discussionController.addMessageToDiscussionController(message, widget.id);
     _controller.clear();
-    print('Sent');
+    isChoosingFile = false;
+    //  print('Sent');
   }
 
   @override
@@ -504,15 +556,14 @@ class _MessagesPageState extends State<MessagesPage> {
                             onTap: () {
                               Get.to(() => OpenImage(
                                     message: message,
-                                    discussionId: widget.id,
-                                    displayName: widget.displayName,
+                                    fileName: message.fileInfos['fileName']!,
                                   ));
                             },
                           )
                         : DocWidget(
                             onTap: () {
-                              _saveAndOpenFile(
-                                  message.content, message.fileName);
+                              _saveAndOpenFile(message.content,
+                                  message.fileInfos['fileName']);
                             },
                             message: message),
               ),
@@ -577,7 +628,7 @@ class _MessagesPageState extends State<MessagesPage> {
                   onTap: () {
                     if (_controller.text.isNotEmpty) {
                       _send(ChatMessage(
-                        fileName: "",
+                        fileInfos: {},
                         messageType: MessageType.text,
                         senderId: keys!.phone.value,
                         content: _controller.text,
@@ -643,18 +694,9 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
       ),
-      actions: [
-        Obx(
-          () => FaceIconWidget(
-            color: Get.find<SettingsController>().faveVerif.value
-                ? color2
-                : Colors.white,
-            onTap: () {
-              Get.find<SettingsController>().changeFaceVerifTemp();
-            },
-          ),
-        ),
-        const SizedBox(
+      actions: const [
+        FaceIconWidgetObs(),
+        SizedBox(
           width: 15,
         ),
         // InkWell(
@@ -665,15 +707,33 @@ class ChatAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         //     height: 37,
         //   ),
         // ),
-        const SizedBox(
-          width: 10,
-        ),
+        // SizedBox(
+        //   width: 10,
+        // ),
       ],
     );
   }
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class FaceIconWidgetObs extends StatelessWidget {
+  const FaceIconWidgetObs({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => FaceIconWidget(
+          color: Get.find<SettingsController>().faveVerif.value
+              ? color2
+              : Colors.white,
+          onTap: () {
+            Get.find<SettingsController>().changeFaceVerifTemp();
+          },
+        ));
+  }
 }
 
 class MessageBubble extends StatelessWidget {
@@ -759,67 +819,78 @@ class ImageWidget extends StatelessWidget {
     final timeString = DateFormat('HH:mm').format(message.sentAt!);
     final isSentByMe =
         message.senderId == Get.find<KeyController>().phone.value;
-
+    final fileName = message.fileInfos['fileName']!;
     return GestureDetector(
       onTap: onTap,
-      child: Hero(
-        tag: 'open-image',
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            crossAxisAlignment:
-                message.senderId == Get.find<KeyController>().phone.value
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-            children: [
-              Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.8,
-                ),
-                decoration: BoxDecoration(
-                  color: isSentByMe ? color2 : color1,
-                  borderRadius: isSentByMe
-                      ? const BorderRadius.only(
-                          topLeft: Radius.circular(20.0),
-                          bottomLeft: Radius.circular(20.0),
-                          bottomRight: Radius.circular(20.0),
-                        )
-                      : const BorderRadius.only(
-                          topRight: Radius.circular(20.0),
-                          bottomLeft: Radius.circular(20.0),
-                          bottomRight: Radius.circular(20.0),
-                        ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 5.0, horizontal: 7.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Image.memory(
-                      //   base64Decode(message.content),
-                      // ),
-                      Text(
-                        message.fileName,
-                        style: TextStyle(
-                          color: isSentByMe ? Colors.white : Colors.black54,
-                          fontSize: 15.0,
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment:
+              message.senderId == Get.find<KeyController>().phone.value
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+          children: [
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.8,
+              ),
+              decoration: BoxDecoration(
+                color: isSentByMe ? color2 : color1,
+                borderRadius: isSentByMe
+                    ? const BorderRadius.only(
+                        topLeft: Radius.circular(20.0),
+                        bottomLeft: Radius.circular(20.0),
+                        bottomRight: Radius.circular(20.0),
+                      )
+                    : const BorderRadius.only(
+                        topRight: Radius.circular(20.0),
+                        bottomLeft: Radius.circular(20.0),
+                        bottomRight: Radius.circular(20.0),
+                      ),
+              ),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 5.0, horizontal: 7.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Image.memory(
+                    //   base64Decode(message.content),
+                    // ),
+
+                    Wrap(spacing: 8.0, runSpacing: 4.0, children: [
+                      Image.asset(
+                        'assets/icons/picture.png',
+                        height: 40,
+                        width: 40,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15.0),
+                        child: Text(
+                          fileName.length < 25
+                              ? message.fileInfos['fileName']
+                              : '${fileName.split('.').first.substring(0, 21)}....${fileName.split('.').last}',
+                          style: TextStyle(
+                            color: isSentByMe ? Colors.white : Colors.black54,
+                            fontSize: 15.0,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 2.0),
-                      Text(
-                        timeString,
-                        style: TextStyle(
-                          color: isSentByMe ? Colors.white70 : Colors.black45,
-                          fontSize: 10.0,
-                        ),
+                    ]),
+                    const SizedBox(height: 2.0),
+                    Text(
+                      timeString,
+                      style: TextStyle(
+                        color: isSentByMe ? Colors.white70 : Colors.black45,
+                        fontSize: 10.0,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -841,7 +912,8 @@ class DocWidget extends StatelessWidget {
     final timeString = DateFormat('HH:mm').format(message.sentAt!);
     final isSentByMe =
         message.senderId == Get.find<KeyController>().phone.value;
-
+    final extension = message.fileInfos['fileName']!.split('.').last;
+    final fileName = message.fileInfos['fileName']!.split('.').first;
     return GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -876,13 +948,21 @@ class DocWidget extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      message.fileName,
-                      style: TextStyle(
-                        color: isSentByMe ? Colors.white : Colors.black54,
-                        fontSize: 15.0,
+                    Wrap(spacing: 8.0, runSpacing: 4.0, children: [
+                      IconToLoadWidget(icons: extension),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          fileName.length < 25
+                              ? message.fileInfos['fileName']
+                              : '${fileName.split('.').first.substring(0, 21)}....$extension',
+                          style: TextStyle(
+                            color: isSentByMe ? Colors.white : Colors.black54,
+                            fontSize: 15.0,
+                          ),
+                        ),
                       ),
-                    ),
+                    ]),
                     const SizedBox(height: 2.0),
                     Text(
                       timeString,
@@ -902,37 +982,65 @@ class DocWidget extends StatelessWidget {
   }
 }
 
+class IconToLoadWidget extends StatelessWidget {
+  const IconToLoadWidget({
+    super.key,
+    required this.icons,
+  });
+
+  final String icons;
+
+  @override
+  Widget build(BuildContext context) {
+    if (icons == 'mp4' || icons == 'pdf') {
+      return Image.asset(
+        'assets/icons/$icons.png',
+        height: 30,
+        width: 30,
+      );
+    } else {
+      return Image.asset(
+        'assets/icons/doc.png',
+        height: 30,
+        width: 30,
+      );
+    }
+  }
+}
+
 class OpenImage extends StatelessWidget {
-  final String displayName;
-  final String discussionId;
+  final String fileName;
   final ChatMessage message;
-  const OpenImage(
-      {super.key,
-      required this.message,
-      required this.discussionId,
-      required this.displayName});
+  const OpenImage({super.key, required this.fileName, required this.message});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: ChatAppBarWidget(
-        home: false,
-        displayName: displayName,
-        id: discussionId,
+      appBar: AppBar(
+          backgroundColor: color1,
+          title: Text(fileName),
+          actions: const [
+            FaceIconWidgetObs(),
+            SizedBox(
+              width: 15,
+            ),
+          ]),
+      body: Image.memory(
+        base64Decode(message.content),
       ),
-      body: Hero(
-          tag: 'open-image',
-          child: Image.memory(base64Decode(message.content))),
     );
   }
 }
 
 class PDFScreen extends StatefulWidget {
-  final String? path;
+  final String path;
+  final String docName;
 
-  const PDFScreen({Key? key, this.path}) : super(key: key);
+  const PDFScreen({Key? key, required this.path, required this.docName})
+      : super(key: key);
 
-  _PDFScreenState createState() => _PDFScreenState();
+  @override
+  State<PDFScreen> createState() => _PDFScreenState();
 }
 
 class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
@@ -947,11 +1055,12 @@ class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Document"),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.share),
-            onPressed: () {},
+        backgroundColor: color1,
+        title: Text(widget.docName),
+        actions: const [
+          FaceIconWidgetObs(),
+          SizedBox(
+            width: 15,
           ),
         ],
       ),
@@ -968,9 +1077,9 @@ class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
             fitPolicy: FitPolicy.BOTH,
             preventLinkNavigation:
                 false, // if set to true the link is handled in flutter
-            onRender: (_pages) {
+            onRender: (cpages) {
               setState(() {
-                pages = _pages;
+                pages = cpages;
                 isReady = true;
               });
             },
@@ -978,22 +1087,22 @@ class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
               setState(() {
                 errorMessage = error.toString();
               });
-              print(error.toString());
+              // print(error.toString());
             },
             onPageError: (page, error) {
               setState(() {
                 errorMessage = '$page: ${error.toString()}';
               });
-              print('$page: ${error.toString()}');
+              // print('$page: ${error.toString()}');
             },
             onViewCreated: (PDFViewController pdfViewController) {
               _controller.complete(pdfViewController);
             },
             onLinkHandler: (String? uri) {
-              print('goto uri: $uri');
+              //print('goto uri: $uri');
             },
             onPageChanged: (int? page, int? total) {
-              print('page change: $page/$total');
+              //print('page change: $page/$total');
               setState(() {
                 currentPage = page;
               });
@@ -1001,7 +1110,7 @@ class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
           ),
           errorMessage.isEmpty
               ? !isReady
-                  ? Center(
+                  ? const Center(
                       child: CircularProgressIndicator(),
                     )
                   : Container()
@@ -1024,6 +1133,74 @@ class _PDFScreenState extends State<PDFScreen> with WidgetsBindingObserver {
 
           return Container();
         },
+      ),
+    );
+  }
+}
+
+class VideoPlayerScreen extends StatefulWidget {
+  final String videoPath;
+  final String fileName;
+
+  const VideoPlayerScreen(
+      {super.key, required this.videoPath, required this.fileName});
+
+  @override
+  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+}
+
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.file(File(widget.videoPath))
+      ..initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized
+        setState(() {});
+        _controller.play();
+      });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: color1,
+        title: Text(widget.fileName),
+        actions: const [
+          FaceIconWidgetObs(),
+          SizedBox(
+            width: 15,
+          ),
+        ],
+      ),
+      body: Center(
+        child: _controller.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: VideoPlayer(_controller),
+              )
+            : const CircularProgressIndicator(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _controller.value.isPlaying
+                ? _controller.pause()
+                : _controller.play();
+          });
+        },
+        child: Icon(
+          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+        ),
       ),
     );
   }

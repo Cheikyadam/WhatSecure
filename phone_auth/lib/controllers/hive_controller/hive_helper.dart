@@ -8,7 +8,7 @@ import 'package:phone_auth/models/recognition_model.dart';
 import 'package:phone_auth/models/user_contact.dart';
 
 class DiscussionHelper {
-  static const _discussion = "alldkiscussions";
+  static const _discussion = "allggdiscussions";
 
   static Future<void> setupDatabase() async {
     await Hive.initFlutter();
@@ -110,7 +110,7 @@ class DiscussionHelper {
 }
 
 class ChatMessageHelper {
-  static const _chatMessage = "allnewichats";
+  static const _chatMessage = "allchats";
 
   static Future<void> setupDatabase() async {
     await Hive.initFlutter();

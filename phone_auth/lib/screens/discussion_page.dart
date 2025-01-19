@@ -6,7 +6,9 @@ import 'package:phone_auth/controllers/get_controllers/discussion_controller.dar
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/settings_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
+import 'package:phone_auth/controllers/hive_controller/hive_helper.dart';
 import 'package:phone_auth/models/chat_model.dart';
+import 'package:phone_auth/models/message_type.dart';
 import 'package:phone_auth/screens/contact_page.dart';
 import 'package:phone_auth/screens/message_page.dart';
 import 'package:intl/intl.dart';
@@ -240,6 +242,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
 
   @override
   Widget build(BuildContext context) {
+    DiscussionHelper.initAllDiscussion();
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -428,19 +431,44 @@ class DiscussionWidget extends StatelessWidget {
                               style: const TextStyle(
                                   fontSize: 20, fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              lastMessage!.content.length > 25
-                                  ? "${lastMessage!.content.substring(0, 25)}..."
-                                  : lastMessage!.content,
-                            ),
+                            lastMessage!.messageType == MessageType.text
+                                ? Text(
+                                    lastMessage!.content.length > 20
+                                        ? "${lastMessage!.content.substring(0, 25)}..."
+                                        : lastMessage!.content,
+                                  )
+                                : Row(
+                                    children: [
+                                      lastMessage!.messageType ==
+                                              MessageType.image
+                                          ? Image.asset(
+                                              'assets/icons/picture.png',
+                                              height: 35,
+                                              width: 35,
+                                            )
+                                          : IconToLoadWidget(
+                                              icons: lastMessage!
+                                                  .fileInfos['fileName']
+                                                  .split('.')
+                                                  .last),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text(
+                                        lastMessage!.fileInfos['fileName']
+                                                    .length <
+                                                18
+                                            ? lastMessage!.fileInfos['fileName']
+                                            : '${lastMessage!.fileInfos['fileName'].split('.').first.substring(0, 14)}....${lastMessage!.fileInfos['fileName'].split('.').last}',
+                                      ),
+                                    ],
+                                  ),
                           ],
                         ),
                         Column(
                           children: [
                             unread == 0
-                                ? Container(
-                                    height: 25,
-                                  )
+                                ? Container()
                                 : Container(
                                     padding: const EdgeInsets.all(5),
                                     decoration: const BoxDecoration(

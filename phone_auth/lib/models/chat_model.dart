@@ -7,7 +7,7 @@ part 'chat_model.g.dart';
 @HiveType(typeId: 1)
 class ChatMessage extends HiveObject {
   ChatMessage({
-    required this.fileName,
+    required this.fileInfos,
     required this.messageType,
     required this.senderId,
     required this.content,
@@ -27,11 +27,11 @@ class ChatMessage extends HiveObject {
   @HiveField(4)
   MessageType messageType;
   @HiveField(5)
-  String fileName = "";
+  Map<String, dynamic> fileInfos;
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> chatjson = {};
-    chatjson['fileName'] = fileName;
+    chatjson['fileInfos'] = fileInfos;
     chatjson['senderId'] = senderId;
     chatjson['recipientId'] = recipientId;
     chatjson['content'] = content;
@@ -47,7 +47,7 @@ class ChatMessage extends HiveObject {
           (e) => e.toString() == 'MessageType.${json['messageType']}'),
       senderId: json['senderId'],
       content: json['content'],
-      fileName: json['fileName'],
+      fileInfos: json['fileInfos'],
       recipientId: json['recipientId'],
     );
   }

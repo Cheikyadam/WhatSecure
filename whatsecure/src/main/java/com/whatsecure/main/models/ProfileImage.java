@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class ProfileImage {
 
 	@Id
-	private String id;
+	private String userId;
 	private String name;
 	private String type;
 	private String filePath;

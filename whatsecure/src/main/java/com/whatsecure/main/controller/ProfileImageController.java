@@ -41,9 +41,7 @@ public class ProfileImageController {
 				.contentType(MediaType.valueOf(service.getImageType(fileId)))
 				.body(imageData);
 		}
-		return ResponseEntity.status(HttpStatus.OK).body("No photo here");
-		
-
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No photo here");
 	}
 	
 	@DeleteMapping("/{fileId}")

@@ -9,7 +9,7 @@ import 'package:phone_auth/screens/auth_page.dart';
 //import 'package:phone_auth/screens/call_page.dart';
 import 'package:phone_auth/screens/contact_page.dart';
 import 'package:phone_auth/screens/discussion_page.dart';
-import 'package:phone_auth/screens/groupe_page.dart';
+//import 'package:phone_auth/screens/groupe_page.dart';
 import 'package:phone_auth/screens/settings/settings_screen.dart';
 
 class MyNewHomePage extends StatefulWidget {
@@ -44,14 +44,14 @@ class _MyNewHomePageState extends State<MyNewHomePage> {
               ),
               label: 'Chats',
             ),
-            CurvedNavigationBarItem(
-              child: Image.asset(
-                'assets/icons/users.png',
-                height: 20,
-                width: 20,
-              ),
-              label: 'Groupes',
-            ),
+            // CurvedNavigationBarItem(
+            //   child: Image.asset(
+            //     'assets/icons/users.png',
+            //     height: 20,
+            //     width: 20,
+            //   ),
+            //   label: 'Groupes',
+            // ),
             // CurvedNavigationBarItem(
             //   child: Image.asset(
             //     'assets/icons/telephone.png',
@@ -95,7 +95,7 @@ class _MyNewHomePageState extends State<MyNewHomePage> {
               controller: _pageControlller,
               children: const <Widget>[
                 DiscussionPage(),
-                GroupePage(),
+                // GroupePage(),
                 //CallPage(),
                 Settings(),
               ],
@@ -127,7 +127,7 @@ class _MyNewHomePageState extends State<MyNewHomePage> {
                   controller: _pageControlller,
                   children: const <Widget>[
                     DiscussionPage(),
-                    GroupePage(),
+                    // GroupePage(),
                     //CallPage(),
                     Settings(),
                   ],

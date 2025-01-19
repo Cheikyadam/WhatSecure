@@ -12,9 +12,10 @@ class Url {
   static var fetching = Uri.parse('http://$ip:8080/allusers');
 }
 
-const ip = "100.100.48.220";
+const ip = "192.168.1.4";
 const webSocketUrl = 'http://$ip:8080/ws';
 bool loaded = false;
+bool isChoosingFile = false;
 const color1 = Color(0xFFC5B8CE);
 const color2 = Color(0xFF880fd8);
 late List<CameraDescription> cameras;

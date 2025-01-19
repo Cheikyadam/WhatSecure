@@ -5,7 +5,7 @@ import 'package:phone_auth/controllers/constants/constant_service.dart';
 import 'package:phone_auth/controllers/get_controllers/discussion_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
-import 'package:phone_auth/encryption/encryption.dart';
+import 'package:phone_auth/encryption/rsa_encryption.dart';
 import 'package:phone_auth/models/chat_model.dart';
 import 'package:phone_auth/models/user_contact.dart';
 import 'package:phone_auth/screens/home.dart';
@@ -371,7 +371,7 @@ class _MessageState extends State<Message> {
                 onPressed: () {
                   if (_controller.text.isNotEmpty) {
                     _send(ChatMessage(
-                      fileName: "",
+                      fileInfos: {},
                       messageType: MessageType.text,
                       senderId: keys!.phone.value,
                       content: _controller.text,

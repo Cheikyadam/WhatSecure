@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -12,6 +13,7 @@ import 'package:phone_auth/machine_learning/painter.dart';
 import 'package:phone_auth/machine_learning/recognizer.dart';
 import 'package:phone_auth/models/recognition.dart';
 import 'package:phone_auth/screens/my_new_home_page.dart';
+import 'package:phone_auth/screens/settings/modif_profile.dart';
 
 class Registration extends StatefulWidget {
   //final void Function(int? result) onRecongized;
@@ -266,7 +268,14 @@ class _RegistrationState extends State<Registration>
                   TextButton(
                     onPressed: () {
                       if (_finish) {
-                        Get.offAll(() => const MyNewHomePage());
+                        if (GetStorage().read('profilPictureIsSet') == null ||
+                            GetStorage().read('profilPictureIsSet') == false) {
+                          Get.offAll(() => const Modifprofile(
+                                first: true,
+                              ));
+                        } else {
+                          Get.offAll(() => const MyNewHomePage());
+                        }
                       }
                     },
                     child: _error
@@ -288,7 +297,16 @@ class _RegistrationState extends State<Registration>
       return Dialog.fullscreen(
         child: TextButton(
           onPressed: () {
-            Get.offAll(() => const MyNewHomePage());
+            if (GetStorage().read('profilPictureIsSet') == null ||
+                GetStorage().read('profilPictureIsSet') == false) {
+              Get.offAll(() => const Modifprofile(
+                    first: true,
+                  ));
+            } else {
+              Get.offAll(() => const MyNewHomePage());
+            }
+
+            //Get.offAll(() => const MyNewHomePage());
           },
           child: const Center(
             child: Text(
@@ -314,32 +332,32 @@ class _RegistrationState extends State<Registration>
   }
 }
 
-class PrepareRegistrationPage extends StatefulWidget {
-  const PrepareRegistrationPage({super.key});
+// class PrepareRegistrationPage extends StatefulWidget {
+//   const PrepareRegistrationPage({super.key});
 
-  @override
-  State<PrepareRegistrationPage> createState() =>
-      _PrepareRegistrationPageState();
-}
+//   @override
+//   State<PrepareRegistrationPage> createState() =>
+//       _PrepareRegistrationPageState();
+// }
 
-class _PrepareRegistrationPageState extends State<PrepareRegistrationPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Container(
-          alignment: Alignment.center,
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Text('Pret pour l\'enregistrement?'),
-            TextButton(
-              onPressed: () {
-                Get.to(() => const Registration());
-              },
-              child: const Text('Oui'),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-}
+// class _PrepareRegistrationPageState extends State<PrepareRegistrationPage> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: Center(
+//         child: Container(
+//           alignment: Alignment.center,
+//           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+//             const Text('Pret pour l\'enregistrement?'),
+//             TextButton(
+//               onPressed: () {
+//                 Get.to(() => const Registration());
+//               },
+//               child: const Text('Oui'),
+//             ),
+//           ]),
+//         ),
+//       ),
+//     );
+//   }
+// }

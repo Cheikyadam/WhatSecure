@@ -34,7 +34,7 @@ class FaceSave extends StatelessWidget {
               VerifWidgets(
                   text: text,
                   onTap: () {
-                    Get.to(() => const Registration());
+                    Get.offAll(() => const Registration());
                   },
                   color1: _color1)
             ],

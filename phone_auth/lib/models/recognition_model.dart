@@ -7,7 +7,7 @@ part 'recognition_model.g.dart';
 class RecognitionModel extends HiveObject {
   @HiveField(0)
   String name;
-  @HiveField(2)
+  @HiveField(1)
   List<double> embeddings;
   RecognitionModel({
     required this.name,

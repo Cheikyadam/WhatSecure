@@ -4,7 +4,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:phone_auth/const.dart';
 import 'package:phone_auth/controllers/auth_service.dart';
 import 'package:phone_auth/controllers/user_api/user_api.dart';
-import 'package:phone_auth/encryption/encryption.dart';
+import 'package:phone_auth/encryption/rsa_encryption.dart';
 import 'package:phone_auth/models/user_model.dart';
 import 'package:phone_auth/screens/settings/face_save.dart';
 
@@ -139,31 +139,26 @@ class _InsPageState extends State<InsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const Center(
-              child: Text(
-                'Bienvenue sur',
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const Center(
-              child: Text(
-                'WhatSecure',
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-              ),
+            Image.asset(
+              'assets/icons/logo.png',
+              width: MediaQuery.of(context).size.width * 0.50,
+              height: MediaQuery.of(context).size.width * 0.50,
             ),
             const SizedBox(
-              height: 15,
+              height: 20,
             ),
             const Center(
               child: Text(
                 'Inscription',
                 style: TextStyle(
-                  fontSize: 30,
-                ),
+                    fontSize: 40,
+                    fontFamily: 'Montserrat',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(left: 20, right: 20, top: 10),
+              margin: const EdgeInsets.only(left: 20, right: 20, top: 20),
               decoration: const BoxDecoration(
                   color: Color(0xFFC5B8CE),
                   borderRadius: BorderRadius.all(Radius.circular(15))),
@@ -180,21 +175,34 @@ class _InsPageState extends State<InsPage> {
                       child: TextFormField(
                         keyboardType: TextInputType.phone,
                         controller: _phoneController,
-                        style:
-                            const TextStyle(fontSize: 20, color: Colors.black),
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
                         decoration: const InputDecoration(
                           label: Text(
                             'Numero de telephone',
-                            style: TextStyle(fontSize: 20),
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              fontSize: 18,
+                            ),
                           ),
                           prefixIcon: Icon(Icons.call),
                           prefixText: '+212',
-                          prefixStyle:
-                              TextStyle(color: Colors.black, fontSize: 20),
+                          prefixStyle: TextStyle(
+                              color: Colors.black,
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
                           border: InputBorder.none,
                           hintStyle: TextStyle(
-                            color: Colors.black,
-                          ),
+                              fontFamily: 'Montserrat',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black),
                         ),
                         validator: (value) {
                           if (value!.length != 9) {
@@ -216,14 +224,16 @@ class _InsPageState extends State<InsPage> {
                       child: TextFormField(
                         controller: _nameController,
                         style:
-                            const TextStyle(fontSize: 20, color: Colors.black),
+                            const TextStyle(fontSize: 18, color: Colors.black),
                         decoration: const InputDecoration(
                           icon: Icon(Icons.person),
                           label: Text(
                             'Nom d\'utilisateur',
                             style: TextStyle(
-                              fontSize: 20,
-                            ),
+                                fontSize: 18,
+                                fontFamily: 'Montserrat',
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
                           ),
                           border: InputBorder.none,
                         ),
@@ -335,7 +345,11 @@ class _InsPageState extends State<InsPage> {
                 },
                 child: const Text(
                   'Obtenir le code',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontFamily: 'Montserrat',
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold),
                 ))
           ],
         ),
@@ -414,6 +428,7 @@ class LoadingPage extends StatelessWidget {
                       box.write('isVerified', true);
                       box.write("phone", phone);
                       box.write('username', name);
+                      box.write('profilPictureIsSet', false);
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         Get.offAll(() => const FaceSave(
                               text: 'Cliquer pour enregistrer votre visage',
@@ -426,5 +441,46 @@ class LoadingPage extends StatelessWidget {
                 }
               })),
     );
+  }
+}
+
+class AvantIns extends StatelessWidget {
+  const AvantIns({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(),
+        body: SingleChildScrollView(
+          child: Column(children: [
+            const Center(
+              child: Text(
+                textAlign: TextAlign.center,
+                'Bienvenue sur WhatSecure',
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(
+              height: 50,
+            ),
+            Image.asset('assets/icons/logo.png'),
+            const SizedBox(
+              height: 50,
+            ),
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xffd786a8).withOpacity(0.4)),
+                onPressed: () {
+                  Get.offAll(() => const InsPage());
+                },
+                child: const Text(
+                  'Inscription',
+                  style: TextStyle(fontSize: 30, color: Colors.black),
+                ),
+              ),
+            ),
+          ]),
+        ));
   }
 }

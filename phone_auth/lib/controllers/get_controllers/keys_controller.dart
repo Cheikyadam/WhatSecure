@@ -41,6 +41,16 @@ class KeyController extends GetxController {
     }
   }
 
+  void changeUsername(String newUsername) {
+    GetStorage().write('username', username);
+    username.value = newUsername;
+  }
+
+  void changeUserPhone(String newPhone) {
+    GetStorage().write('phone', phone);
+    phone.value = newPhone;
+  }
+
   String getDisplayName(String discussionId) {
     return UserContact.getDisplayname(
       allContact,

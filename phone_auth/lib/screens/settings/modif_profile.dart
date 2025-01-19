@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phone_auth/const.dart';
 import 'package:path/path.dart' as path;
+import 'package:phone_auth/controllers/get_controllers/discussion_controller.dart';
+import 'package:phone_auth/controllers/get_controllers/keys_controller.dart';
 import 'package:phone_auth/controllers/get_controllers/settings_controller.dart';
+import 'package:phone_auth/controllers/get_controllers/stomp_controller.dart';
+import 'package:phone_auth/controllers/hive_controller/hive_helper.dart';
 import 'package:phone_auth/controllers/profile_image_api/profile_image_api.dart';
+import 'package:phone_auth/screens/my_new_home_page.dart';
 
 class Modifprofile extends StatefulWidget {
-  const Modifprofile({super.key});
+  final bool first;
+  const Modifprofile({super.key, required this.first});
 
   @override
   State<Modifprofile> createState() => _ModifprofileState();
@@ -17,11 +24,19 @@ class _ModifprofileState extends State<Modifprofile> {
   late ImagePicker imagePicker;
   final settingsController = Get.find<SettingsController>();
   Color _color = Colors.white;
+  bool myFirst = false;
 
   @override
   void initState() {
     super.initState();
     imagePicker = ImagePicker();
+    myFirst = widget.first;
+
+    if (!loaded) {
+      Get.put(KeyController());
+      Get.put(DiscussionController());
+      Get.put(StompController());
+    }
   }
 
   _imgFromCamera() async {
@@ -30,6 +45,9 @@ class _ModifprofileState extends State<Modifprofile> {
       String fileExtension = path.extension(pickedFile.path);
       await ProfileImageApi.postImage(pickedFile.path, fileExtension);
       settingsController.changeImageUrl();
+      setState(() {
+        myFirst = false;
+      });
     }
   }
 
@@ -40,6 +58,9 @@ class _ModifprofileState extends State<Modifprofile> {
       String fileExtension = path.extension(pickedFile.path);
       await ProfileImageApi.postImage(pickedFile.path, fileExtension);
       settingsController.changeImageUrl();
+      setState(() {
+        myFirst = false;
+      });
     }
   }
 
@@ -53,6 +74,25 @@ class _ModifprofileState extends State<Modifprofile> {
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
+      floatingActionButton: myFirst
+          ? ElevatedButton(
+              onPressed: () {
+                if (!widget.first) {
+                  GetStorage().write('profilPictureIsSet', true);
+                  DiscussionHelper.initAllDiscussion();
+                }
+                Get.offAll(() => const MyNewHomePage());
+              },
+              child: const Text('Modifier plus tard'))
+          : ElevatedButton(
+              onPressed: () {
+                if (!widget.first) {
+                  GetStorage().write('profilPictureIsSet', true);
+                  DiscussionHelper.initAllDiscussion();
+                }
+                Get.offAll(() => const MyNewHomePage());
+              },
+              child: const Text('Sauvegarder')),
       body: Center(
         child: SingleChildScrollView(
           child: Column(

@@ -1,6 +1,7 @@
 package com.whatsecure.main.models;
 
 import java.util.Date;
+import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,12 +19,12 @@ public class ChatMessage {
 	    private String recipientId;
 	    private String content;
 	    private Date sentAt;
-	    private String fileName;
+	    private Map<String, String> fileInfos;
 	    private MessageType messageType;
 }
 
 enum MessageType{
 	image,
 	text,
-	doc
-}
+	doc,
+	}

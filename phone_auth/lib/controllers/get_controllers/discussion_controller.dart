@@ -11,7 +11,7 @@ class DiscussionController extends GetxController {
   void onInit() {
     super.onInit();
     initDiscussion();
-    iniAllDiscussionUnread();
+    initAllDiscussionUnread();
   }
 
   void initDiscussion() async {
@@ -59,7 +59,7 @@ class DiscussionController extends GetxController {
     // allDiscussions[discussionId] = newDis;
 
     await DiscussionHelper.addMessageToDiscussion(message, discussionId);
-    iniAllDiscussionUnread();
+    initAllDiscussionUnread();
     allDiscussions.refresh();
     // if (allDiscussions[discussionId] == null) {
     //   // allDiscussions.firstRebuild;
@@ -87,21 +87,26 @@ class DiscussionController extends GetxController {
   Future<void> reinitUnreadController(String discussionId) async {
     allDiscussions.refresh();
     await DiscussionHelper.reinitUnread(discussionId);
-    iniAllDiscussionUnread();
+    initAllDiscussionUnread();
   }
 
-  void iniAllDiscussionUnread() {
+  void initAllDiscussionUnread() {
     for (Discussion discussion in allDiscussions.values) {
       if (discussion.unread != 0) {
-        allDiscussionsUnread[discussion.discussionId] = (discussion);
+        allDiscussionsUnread[discussion.discussionId] = discussion;
       }
     }
+
+    List<String> discussionsToRemove = [];
+
     for (Discussion discussion in allDiscussionsUnread.values) {
       if (discussion.unread == 0) {
-        //enlever la discussion dans le dico
-        allDiscussionsUnread.remove(discussion
-            .discussionId); //[discussion.discussionId] = (discussion);
+        discussionsToRemove.add(discussion.discussionId);
       }
+    }
+
+    for (String discussionId in discussionsToRemove) {
+      allDiscussionsUnread.remove(discussionId);
     }
   }
 

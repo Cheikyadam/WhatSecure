@@ -35,7 +35,7 @@ public class ImagesService {
         }
         
         imgRepository.save(ProfileImage.builder()
-        		.id(id)
+        		.userId(id)
                 .name(file.getOriginalFilename())
                 .type(file.getContentType())
                 .filePath(filePath).build());     	

@@ -164,18 +164,34 @@ class IconProfilWidgetContact extends StatelessWidget {
           width: 50,
           height: 50,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            padding: const EdgeInsets.all(7),
-            decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color.fromARGB(255, 230, 230, 230)),
-            child: Image.asset(
-              'assets/icons/profil.png',
-              width: 40,
-              height: 40,
-              fit: BoxFit.cover,
-            ),
-          ),
+          errorBuilder: (context, error, stackTrace) {
+            if (error is NetworkImageLoadException && error.statusCode == 404) {
+              return Container(
+                padding: const EdgeInsets.all(7),
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color.fromARGB(255, 230, 230, 230)),
+                child: Image.asset(
+                  'assets/icons/profil.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+              );
+            }
+            return Container(
+              padding: const EdgeInsets.all(7),
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color.fromARGB(255, 230, 230, 230)),
+              child: Image.asset(
+                'assets/icons/profil.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
+            );
+          },
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {
               return child;

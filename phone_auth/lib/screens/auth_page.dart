@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:phone_auth/screens/my_new_home_page.dart';
+import 'package:local_auth_android/local_auth_android.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -18,11 +19,18 @@ class _AuthPageState extends State<AuthPage> {
     try {
       bool authenticated = await auth.authenticate(
         localizedReason:
-            'Scan your fingerprint (or face or whatever) to authenticate',
+            'Authentification requise pour acceder a l\'application',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: true,
+
+          //biometricOnly: true,
         ),
+        authMessages: const <AuthMessages>[
+          AndroidAuthMessages(
+            signInTitle: 'Pour plus de securite, veuillez vous authentifier',
+            cancelButton: 'Non merci!',
+          ),
+        ],
       );
       _authenticated = authenticated;
       return authenticated;
@@ -56,9 +64,9 @@ class _AuthPageState extends State<AuthPage> {
             // Si la Future se termine avec succès, afficher les données
             if (snapshot.data == true) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                Get.off(() => const MyNewHomePage());
+                Get.offAll(() => const MyNewHomePage());
               });
-              return Container();
+              return myWidget(context);
             } else {
               return myWidget(context);
             }
@@ -88,18 +96,25 @@ class _AuthPageState extends State<AuthPage> {
 
   Widget myWidget(BuildContext context) {
     return Scaffold(
+      //appBar: AppBar(),
       body: Center(
-        child: TextButton(
-            onPressed: () async {
-              await _authenticateWithBiometrics();
-              if (_authenticated) {
-                Get.off(() => const MyNewHomePage());
-              }
-            },
-            child: const Text(
-              "Authenticate",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            )),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Image.asset('assets/icons/logo.png'),
+            TextButton(
+                onPressed: () async {
+                  await _authenticateWithBiometrics();
+                  if (_authenticated) {
+                    Get.offAll(() => const MyNewHomePage());
+                  }
+                },
+                child: const Text(
+                  "Verifier votre identité",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                )),
+          ],
+        ),
       ),
     );
   }
