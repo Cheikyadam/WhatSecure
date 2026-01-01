@@ -8,9 +8,11 @@ Si elle est activée, l'application active la caméra en tâche de fond. En cas 
 
 Vous pouvez visionner la présentation canvas du projet via ce 
 <a href="https://www.canva.com/design/DAGJ1yqKEnk/AOHfPVVke0pdXABudRiKcQ/edit?utm_content=DAGJ1yqKEnk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer">
-  lien
+  lien.
 </a>
+
 🎥 À la fin de la présentation, vous trouverez des vidéos démo de l'application.
+
 💡 Tips : Mettre en plein écran pour bien visualiser.
 
 # Organisation du code
