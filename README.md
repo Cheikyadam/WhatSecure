@@ -6,7 +6,12 @@ Les algorithmes de chiffrement AES et RSA sont utilisés afin de protéger les d
 La principale fonctionnalité de l'application, c'est l'activation de la vérification faciale.
 Si elle est activée, l'application active la caméra en tâche de fond. En cas de détection d'un visage qui n'est pas le vôtre, il y a verrouillage de l'application.
 
-Vous pouvez visionner la présentation du projet via ce [lien](https://www.canva.com/design/DAGJ1yqKEnk/AOHfPVVke0pdXABudRiKcQ/edit?utm_content=DAGJ1yqKEnk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton).
+Vous pouvez visionner la présentation canvas du projet via ce 
+<a href="https://www.canva.com/design/DAGJ1yqKEnk/AOHfPVVke0pdXABudRiKcQ/edit?utm_content=DAGJ1yqKEnk&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton" target="_blank" rel="noopener noreferrer">
+  lien
+</a>
+🎥 À la fin de la présentation, vous trouverez des vidéos démo de l'application.
+💡 Tips : Mettre en plein écran pour bien visualiser.
 
 # Organisation du code
 
